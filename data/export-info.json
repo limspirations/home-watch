@@ -1,0 +1,9 @@
+{
+  "exportedAt": "2026-11-24",
+  "sourceCommit": "50e5eb5f27392e6a10b96dc21e41d90e5dd8461e",
+  "sourceVersion": 11,
+  "candidates": 10,
+  "personalBrowserStorageIncluded": false,
+  "defaultData": "default-board-backup.json",
+  "historicalData": "transaction-history.json"
+}
