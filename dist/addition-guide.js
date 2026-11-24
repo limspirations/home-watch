@@ -73,6 +73,7 @@ KB 출처: URL
  // The visible input is a short human-readable report, never JSON or a file.
  function parseText(raw,purpose='',memo=''){
   let input=String(raw??'').replace(/^\uFEFF/,'').replace(/[\u200B-\u200D\uFEFF]/g,'').replace(/\r\n?/g,'\n').replace(/\*\*/g,'').replace(/`/g,'').trim();
+  input=input.replace(/\\+[ \t]*(?=\n|$)/g,'');
   if(!input||input.length>50000)throw Error('GPT 조사 답변을 붙여 넣어 주세요.');
   const fields=new Map(),aliases={'아파트명':'단지명','아파트 이름':'단지명','전용 면적':'전용면적','KB 매물 평균가':'KB 매물평균가','네이버 링크':'네이버 출처','KB 링크':'KB 출처','실거래 링크':'실거래 출처','연평균 링크':'연평균 출처','메모':'조사 메모'};
   const labels=['단지명','지역','주소','전용면적','네이버 호가','네이버 출처','KB 매물평균가','KB 출처','최근 실거래','실거래 출처','연평균 실거래','연평균 출처','조사 메모'];
