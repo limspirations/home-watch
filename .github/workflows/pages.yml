@@ -1,3 +1,4 @@
+
 name: Publish apartment tracker
 
 on:
@@ -15,27 +16,30 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  build:
+    name: Check and upload site
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm run check
+      - run: npm test
+      - uses: actions/configure-pages@v5
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: dist
+
   deploy:
+    name: Deploy to GitHub Pages
+    needs: build
     runs-on: ubuntu-latest
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-
-      - run: npm run check
-      - run: npm test
-
-      - uses: actions/configure-pages@v5
-
-      - uses: actions/upload-pages-artifact@v4
-        with:
-          path: dist
-
       - name: Deploy
         id: deployment
         uses: actions/deploy-pages@v4
