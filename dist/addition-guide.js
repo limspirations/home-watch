@@ -1,4 +1,4 @@
-/* Home Watch — GitHub main의 단일 단지 GPT 등록 기능 개선. */
+/* Home Watch — GPT 등록 및 카드 표시 보완 v20261125-r4 (용적률 및 주소 분류) */
 (function(){
  'use strict';
  const byId=id=>document.getElementById(id),dialog=byId('additionmanual'),app=window.homeWatch;
@@ -16,7 +16,7 @@
 
 대상: ${candidate}${repo?' (참고 사이트: '+repo+')':''}
 
-1. 단지명, 도로명주소, 지역, 실제 전용면적을 확인해. 과거 명칭, 주소, 단지번호로도 재검색해. 전용 84㎡급(80㎡ 초과~85㎡ 이하)을 우선하고 없으면 가장 가까운 실제 전용면적을 선택해. 최근 거래와 연평균은 동일 평형군으로 집계하며 다른 평형, 전세, 월세, 분양권은 제외해.
+1. 단지명, 도로명주소, 법정동, 지역, 실제 전용면적을 확인해. 지역은 실제 주소 기준으로 분류해. 동탄구는 모두 동탄, 기흥구는 모두 기흥, 수원시 영통구 이의동·하동은 모두 광교로 분류해. 특히 도로명주소에는 법정동이 생략되기 쉬우므로 실제 확인한 법정동을 주소 끝 괄호에 함께 적어(예: 도로명주소 (이의동)). 법정동을 추정하지 마. 다른 지역은 기존 생활권 분류를 유지해. 과거 명칭, 주소, 단지번호로도 재검색해. 전용 84㎡급(80㎡ 초과~85㎡ 이하)을 우선하고 없으면 가장 가까운 실제 전용면적을 선택해. 최근 거래와 연평균은 동일 평형군으로 집계하며 다른 평형, 전세, 월세, 분양권은 제외해. 단지 전체의 실제 용적률(%)을 건축물대장, 공식 단지정보, 네이버·KB·호갱노노 단지 상세정보 등에서 직접 확인하고 출처 URL을 별도로 적어. 건폐율, 법정 상한 용적률, 재건축 계획 용적률과 혼동하지 마. 확인 불가 시 미확인으로 표시해.
 2. 네이버 부동산에서 해당 평형군의 실제 정상 매매 개별 매물 중 확인 가능한 최저 호가를 직접 확인해. 가격, 확인일, 전용면적, 동, 층/전체층, 방향, 특징을 기록해. 타 사이트 재게시를 대신 쓰지 마. KB부동산에서는 해당 평형군의 매물평균가만 직접 확인하고 일반평균시세, 상·하위평균가, 실거래가로 대체하지 마.
 3. 국토교통부 실거래가 공개시스템, 호갱노노, 아실, 부동산지인, KB, 네이버, 집품 및 실거래 전문 사이트를 순차적으로 확인해. 계약 취소 및 중복을 제외한 정상 매매 최근 10건을 계약일 최신순으로 확보해. 동일 날짜·가격만으로 별개 거래를 삭제하지 마. 각 거래의 정확한 면적을 확인해.
 4. 최우선: 현재 연도 포함 최근 10개 연도 전체 정상 거래를 확보해 연도별 산술평균(거래금액 합계/거래건수)과 건수를 계산해. 최근 10건 제한은 집계에 적용하지 마. 연평균 직접 제공 자료가 없으면 개별 거래로 계산해. 월평균을 이용한다면 거래건수 가중평균만 허용하고 반올림 한계를 밝혀. 중앙값, 호가, 시세를 평균 실거래로 대체하지 마. 일부 거래만 확보한 연도는 전체 평균으로 표시하지 말고 미확인 처리해. 현재 연도는 조사일까지 누적 기준. 거래가 없는 연도는 0원으로 기록하거나 추정하지 마.
@@ -25,11 +25,13 @@
 7. 조사 메모와 검토 메모는 반드시 별도 항목으로 출력해. 조사 메모에는 실제 집계 면적 범위, 자료 누락, 부분 집계, 출처 및 확인 한계만 간략하게 기록해. 검토 메모에는 [가격 분석] [입지 분석] [핵심 장점] [핵심 단점] [미래 가치] [환금성] [GPT 평가] [평가 점수] [추가 확인 사항] [추가 출처]를 포함해 500~1,000자로 작성해. GPT 의견 및 점수는 조사 메모에 절대 넣지 마. 검토 메모는 사이트의 수정·저장 가능한 검토 메모 입력란에 들어갈 데이터야.
 8. 제출 전 단지·주소·면적, 가격 구분, 최근 거래와 10개년 집계, 실제 URL을 검증해. 최소 한 가지 확인된 가격과 직접 확인한 출처가 필요해. 충분히 검색한 뒤 미확인 값은 미확인으로 표시해.
 
-최종 출력은 아래 항목명을 그대로 사용한 일반 텍스트만 작성해. 표, 마크다운 링크, 인용 배지, 번호 목록, JSON, 코드 블록, GitHub 변경, 파일 생성은 하지 마. 각 항목은 한 줄, 거래는 세미콜론, 값은 슬래시로 구분해. 다른 출처를 사용하는 거래나 연도는 반드시 그 행 맨 끝에 해당 URL을 붙여. 연평균은 전체 집계가 확인된 연도만 가격과 건수를 기입해. 검토 메모는 최대 1,500자, 수동 입력용 투자 목적은 출력하지 마. 아래 형식의 예시를 실제 데이터로 쓰지 마. 최근 실거래의 면적은 확인된 실제 숫자로 각 거래 뒤에 추가해.
+최종 출력은 아래 항목명을 그대로 사용한 일반 텍스트만 작성해. 표, 마크다운 링크, 인용 배지, 번호 목록, JSON, 코드 블록, GitHub 변경, 파일 생성은 하지 마. 각 항목은 한 줄, 거래는 세미콜론, 값은 슬래시로 구분해. 출처가 여러 개라면 반드시 모든 거래와 연도 행 맨 끝에 각자의 정확한 URL을 붙여. 예: 연도 / 가격억 / 거래건수건 / URL. 출처가 하나이면 출처 항목에만 써도 돼. 연평균은 전체 집계가 확인된 연도만 가격과 건수를 기입해. 검토 메모는 최대 1,500자, 수동 입력용 투자 목적은 출력하지 마. 아래 형식의 예시를 실제 데이터로 쓰지 마. 최근 실거래의 면적은 확인된 실제 숫자로 각 거래 뒤에 추가해.
 단지명: 실제 이름
-지역: 실제 지역
-주소: 실제 도로명주소
+지역: 동탄/광교/기흥/수원 중 해당 지역 한 곳 (동탄구=동탄, 기흥구=기흥, 영통구 이의동·하동=광교; 그 외 지역은 대표 지역명 하나만)
+주소: 실제 도로명주소 (확인한 법정동)
 전용면적: 대표 실제 숫자㎡ (연평균 평형군은 조사 메모에 기록)
+용적률: 실제 숫자%
+용적률 출처: 직접 확인한 URL
 네이버 호가: 가격억 / YYYY-MM-DD / 실제 전용면적㎡
 네이버 출처: URL
 네이버 매물 특징: 동 / 층 / 방향 및 특징
@@ -47,15 +49,13 @@ KB 출처: URL
   let input=String(raw??'').replace(/^\uFEFF/,'').replace(/[\u200B-\u200D\uFEFF]/g,'').replace(/\r\n?/g,'\n').replace(/\*\*/g,'').replace(/`/g,'').trim();
   input=input.replace(/\\+[ \t]*(?=\n|$)/g,'');
   if(!input||input.length>50000)throw Error('GPT 조사 답변을 붙여 넣어 주세요.');
-  const fields=new Map(),aliases={'아파트명':'단지명','아파트 이름':'단지명','전용 면적':'전용면적','KB 매물 평균가':'KB 매물평균가','네이버 링크':'네이버 출처','KB 링크':'KB 출처','실거래 링크':'실거래 출처','연평균 링크':'연평균 출처','메모':'조사 메모','GPT 검토 메모':'검토 메모','검토메모':'검토 메모','조사메모':'조사 메모'};
-  const labels=['단지명','지역','주소','전용면적','네이버 호가','네이버 출처','네이버 매물 특징','KB 매물평균가','KB 출처','최근 실거래','실거래 출처','연평균 실거래','연평균 출처','조사 메모','검토 메모'];
+  const fields=new Map(),aliases={'아파트명':'단지명','아파트 이름':'단지명','전용 면적':'전용면적','용적률 링크':'용적률 출처','KB 매물 평균가':'KB 매물평균가','네이버 링크':'네이버 출처','KB 링크':'KB 출처','실거래 링크':'실거래 출처','연평균 링크':'연평균 출처','메모':'조사 메모','GPT 검토 메모':'검토 메모','검토메모':'검토 메모','조사메모':'조사 메모'};
+  const labels=['단지명','지역','주소','전용면적','용적률','용적률 출처','네이버 호가','네이버 출처','네이버 매물 특징','KB 매물평균가','KB 출처','최근 실거래','실거래 출처','연평균 실거래','연평균 출처','조사 메모','검토 메모'];
   // Accept collapsed clipboard line breaks, but do not split labels inside a memo.
   const labelPattern=[...labels,...Object.keys(aliases).filter(k=>k!=='메모')].sort((a,b)=>b.length-a.length).join('|');
-  if(!/^\s*(?:단지명|아파트명|아파트 이름)\s*[:：].*\n\s*지역\s*[:：]/m.test(input)){
-   const cut=input.search(/(?:^|\s)(?:조사 메모|조사메모|검토 메모|검토메모)\s*[:：]/);
-   const head=cut<0?input:input.slice(0,cut),tail=cut<0?'':input.slice(cut);
-   input=head.replace(new RegExp('([^\\n])\\s+('+labelPattern+')\\s*[:：]','g'),'$1\n$2:')+(tail?'\n'+tail.trim().replace(/\s+(검토 메모|검토메모)\s*[:：]/,'\n$1:'):'');
-  }
+  const cut=input.search(/(?:^|\s)(?:조사 메모|조사메모|검토 메모|검토메모)\s*[:：]/);
+  const head=cut<0?input:input.slice(0,cut),tail=cut<0?'':input.slice(cut);
+  input=head.replace(new RegExp('([^\\n])\\s+('+labelPattern+')\\s*[:：]','g'),'$1\n$2:')+(tail?'\n'+tail.trim().replace(/(?:^|[ \t]+)(검토 메모|검토메모|GPT 검토 메모)\s*[:：]/,'\n$1:'):'');
   let active='';
   for(let line of input.split('\n')){
    line=line.trim().replace(/^\s*(?:[-•*]|\d+[.)])\s+/,'');if(!line)continue;
@@ -72,16 +72,23 @@ KB 출처: URL
   const value=k=>(fields.get(k)||'').trim(),missing=v=>!v||/^(?:미확인|미확보|없음|자료 없음|확인 불가|해당 없음|[-—–])(?:\s|$|[.(])/.test(v);
   const urlsOf=v=>[...String(v).matchAll(/https?:\/\/[^\s<>\[\]"|;；]+/gi)].map(m=>link(m[0].replace(/[.,;]+$/,''))).filter(Boolean);
   const numberPrice=v=>{const x=String(v).replace(/,/g,'');let m=x.match(/(\d+(?:\.\d+)?)\s*억(?:\s*(\d+(?:\.\d+)?)\s*만(?:원)?)?/);return m?Number(m[1])+Number(m[2]||0)/10000:NaN;};
-  const name=value('단지명'),region=value('지역'),address=value('주소'),areaMatch=value('전용면적').match(/\d+(?:\.\d+)?/),area=areaMatch?Number(areaMatch[0]):null;
+  const name=value('단지명'),rawRegion=value('지역'),address=value('주소'),region=app.resolveRegion?.(address,rawRegion)||(/동\s*탄\s*구/.test(rawRegion+' '+address)?'동탄':(/^(동탄|광교|기흥|수원)(?:$|[\s(·/]|구|[12]신도시|신도시)/.exec(rawRegion)?.[1]||rawRegion)),areaMatch=value('전용면적').match(/\d+(?:\.\d+)?/),area=areaMatch?Number(areaMatch[0]):null;
   if([name,region,address].some(missing)||!positive(area)||area>500)throw Error('단지명, 지역, 주소, 전용면적이 필요해요. GPT 조사 답변 전체를 복사했는지 확인해 주세요.');
   if(!str(purpose,100))throw Error('투자 목적을 직접 입력해 주세요.');
   const existing=app.getData();if(existing.some(a=>normalize(a.name)===normalize(name)))return {added:[],skipped:[name+' — 이미 등록됨'],warnings:[]};
   const warnings=[],yearNow=Number(todayISO().slice(0,4));
+  const farText=value('용적률'),farMatch=farText.match(/^\s*(\d[\d,]*(?:\.\d+)?)\s*%\s*(?:$|\/\s*https?:\/\/)/i),farNumber=farMatch?Number(farMatch[1].replace(/,/g,'')):null;
+  const farUrl=urlsOf(value('용적률 출처'))[0]||urlsOf(farText)[0]||'';
+  const far=validFar(farNumber)&&farUrl?farNumber:null;
+  if(!missing(farText)&&far===null)warnings.push('용적률 미확인: 실제 수치 또는 출처 URL 확인 필요');
   const rows=(key,sourceKey,kind)=>{
    const v=value(key);if(missing(v))return [];
-   const sources=[...new Set(urlsOf(value(sourceKey)))],fallback=sources.length===1?sources[0]:'';
+   const sourceText=value(sourceKey),sources=[...new Set(urlsOf(sourceText))],fallback=sources.length===1?sources[0]:'';
+   // Older GPT replies sometimes annotate the source with an explicit year range.
+   // Only use the source when exactly one annotation covers the row's year.
+   const byYear=y=>{if(kind!=='annual'||!Number.isInteger(y))return '';const matches=sourceText.split(/;|；|\n/).flatMap(part=>{const u=urlsOf(part);if(u.length!==1)return [];const note=part.replace(/https?:\/\/[^\s<>\[\]"|;；]+/gi,'');const ranges=[...note.matchAll(/(20\d{2})\s*(?:년\s*)?(?:[~～–—-]|부터)\s*(20\d{2})/g)];const inRange=ranges.some(m=>y>=Number(m[1])&&y<=Number(m[2]));const withoutRanges=note.replace(/(20\d{2})\s*(?:년\s*)?(?:[~～–—-]|부터)\s*(20\d{2})/g,'');const singles=[...withoutRanges.matchAll(/\b20\d{2}\b/g)].map(m=>Number(m[0]));return inRange||singles.includes(y)?u:[];});const unique=[...new Set(matches)];return unique.length===1?unique[0]:'';};
    const records=v.split(/;|；/).map(row=>row.trim()).filter(r=>!missing(r)).flatMap(row=>{
-    const date=row.match(/\b\d{4}-\d{2}-\d{2}\b/)?.[0],year=Number(row.match(/(?:^|\s)(\d{4})(?:년|\s|\/|$)/)?.[1]),price=numberPrice(row),url=urlsOf(row)[0]||fallback,host=url?new URL(url).hostname:'';
+    const date=row.match(/\b\d{4}-\d{2}-\d{2}\b/)?.[0],year=Number(row.match(/(?:^|\s)(\d{4})(?:년|\s|\/|$)/)?.[1]),price=numberPrice(row),url=urlsOf(row)[0]||fallback||byYear(year),host=url?new URL(url).hostname:'';
     const areaFound=row.match(/(\d+(?:\.\d+)?)\s*㎡/),rowArea=areaFound?Number(areaFound[1]):area;
     let reason='';if(!positive(price))reason='가격';else if(!url)reason=sources.length>1?'개별 출처 URL':'출처';else if(!positive(rowArea)||(area>80&&area<=85?!(rowArea>80&&rowArea<=85):Math.abs(rowArea-area)>0.01))reason='평형군';else if(kind==='annual'&&(!Number.isInteger(year)||year<yearNow-9||year>yearNow))reason='연도';else if(kind!=='annual'&&!dateOK(date))reason='날짜';else if(kind==='naver'&&!/(^|\.)naver\.com$/.test(host))reason='네이버 원문';else if(kind==='kb'&&!/(^|\.)kbland\.kr$/.test(host))reason='KB 원문';
     if(reason){warnings.push(key+' 일부 제외: '+reason+' 확인 필요');return [];}
@@ -109,7 +116,7 @@ KB 출처: URL
   // GPT review goes in a.memo (the editable detail textarea), not researchNote.
   const manual=str(memo,2000),combined=manual?(gptMemo?gptMemo+'\n\n[내 메모]\n'+manual:manual):gptMemo;
   if(combined.length>2000)throw Error('GPT 검토 메모와 내 메모를 합쳐 2,000자 이하로 줄여 주세요.');
-  const current={id:globalThis.crypto?.randomUUID?.()||'paste-'+Date.now(),name,region,address,area,purpose:str(purpose,100),kind:p.label,url:p.url,memo:combined,trade:t?{price:t.price,date:t.date,floor:t.floor||'미확인'}:null,history:primary.map(r=>({date:r.date,price:r.price,source:r.label,url:r.url})),referenceHistory:kbAsks.map(r=>({date:r.date,price:r.price,kind:r.label,source:'KB부동산',url:r.url})),referenceUrl:kb?.url||'',areaApprox:false,pasteMarket:{naverAsks,kbAsks,trades,annual,researchNote:str([value('조사 메모'),...new Set(warnings)].filter(Boolean).join(' · '),2000)}};
+  const current={id:globalThis.crypto?.randomUUID?.()||'paste-'+Date.now(),name,region,address,area,far,farUrl:far===null?'':farUrl,purpose:str(purpose,100),kind:p.label,url:p.url,memo:combined,trade:t?{price:t.price,date:t.date,floor:t.floor||'미확인'}:null,history:primary.map(r=>({date:r.date,price:r.price,source:r.label,url:r.url})),referenceHistory:kbAsks.map(r=>({date:r.date,price:r.price,kind:r.label,source:'KB부동산',url:r.url})),referenceUrl:kb?.url||'',areaApprox:false,pasteMarket:{naverAsks,kbAsks,trades,annual,researchNote:str([value('조사 메모'),...new Set(warnings)].filter(Boolean).join(' · '),2000)}};
   if(naverAsks.length&&(p.building||p.floor||p.description))current.listing={building:p.building||'동 미확인',floor:p.floor||'층 미확인',description:p.description};
   if(!app.isValid([...existing,current]))throw Error('기존 보드와 합칠 수 없는 데이터예요.');
   return {added:[current],skipped:[],warnings:[...new Set(warnings)]};
@@ -126,8 +133,40 @@ KB 출처: URL
   return svg+'<div class="price-legend">'+series.map(s=>'<span><i style="background:'+s.color+'"></i>'+s.name+'</span>').join('')+'</div>';
  }
  function table(rows,annual=false){return '<div class="market-table-wrap"><table class="history"><thead><tr><th>'+(annual?'연도':'날짜')+'</th><th>가격</th><th>전용</th><th>'+(annual?'건수':'층')+'</th><th>출처</th></tr></thead><tbody>'+([...rows].reverse().map(r=>'<tr><td>'+escape(annual?r.year:r.date)+'</td><td>'+money(r.price)+'</td><td>'+escape(r.area)+'㎡</td><td>'+escape(annual?r.count??'—':r.floor||'—')+'</td><td>'+(link(r.url)?'<a target="_blank" rel="noopener noreferrer" href="'+escape(link(r.url))+'">원문</a>':'—')+'</td></tr>').join('')||'<tr><td colspan="5">미확보</td></tr>')+'</tbody></table></div>';}
+ // Existing records do not need migration or re-registration. Store an optional
+ // numeric FAR at the same level as area; use the existing board/cloud storage.
+ function validFar(v){return typeof v==='number'&&Number.isFinite(v)&&v>0;}
+ function renderFar(a){
+  const grid=byId('detailcontent')?.querySelector?.('.detailgrid');if(!grid||grid.querySelector('#hw-far-cell'))return;
+  const cells=[...grid.children],areaCell=cells.find(c=>c.querySelector('small')?.textContent.trim()==='전용면적');if(!areaCell)return;
+  // The existing detail card has four cells. Lay out three cells in its first
+  // row and preserve the two equal-width transaction cells in the second row.
+  if(cells.length===4&&cells.indexOf(areaCell)===1){grid.style.gridTemplateColumns='repeat(6,minmax(0,1fr))';grid.style.columnGap='10px';cells.forEach((c,i)=>{c.style.gridColumn=i<2?'span 2':'span 3';c.style.minWidth='0';});}
+  const cell=document.createElement('div');cell.id='hw-far-cell';cell.style.gridColumn=cells.length===4&&cells.indexOf(areaCell)===1?'span 2':'';cell.style.minWidth='0';
+  cell.innerHTML='<small>용적률</small><span id="hw-far-value"></span> <button type="button" id="hw-far-edit" style="font-size:11px;padding:2px 5px;white-space:nowrap;line-height:1.3;vertical-align:middle" aria-label="용적률 수정">수정</button><div id="hw-far-source" style="font-size:11px;overflow-wrap:anywhere;margin-top:4px"></div>';
+  areaCell.after(cell);
+  function paint(record){
+   cell.querySelector('#hw-far-value').textContent=validFar(record.far)?record.far.toLocaleString('ko-KR',{maximumFractionDigits:6})+'%':'미확인';
+   const host=cell.querySelector('#hw-far-source');host.textContent='';const source=validFar(record.far)?link(record.farUrl):'';
+   if(source){const anchor=document.createElement('a');anchor.href=source;anchor.target='_blank';anchor.rel='noopener noreferrer';anchor.textContent='출처';host.append(anchor);}
+   else if(validFar(record.far))host.textContent='직접 입력';
+  }
+  paint(a);
+  cell.querySelector('#hw-far-edit').onclick=()=>{
+   try{
+    if(byId('add')?.disabled)throw Error('동기화 중입니다. 완료 후 다시 시도하세요.');
+    const data=app.getData(),record=data.find(x=>x.id===a.id);if(!record)throw Error('아파트를 찾을 수 없어요.');
+    const answer=window.prompt('실제 단지 용적률(%)을 입력하세요. 빈칸으로 저장하면 미확인으로 변경됩니다.',validFar(record.far)?String(record.far):'');if(answer===null)return;
+    const raw=answer.trim(),m=raw.match(/^(\d[\d,]*(?:\.\d+)?)\s*%?$/),next=raw&&m?Number(m[1].replace(/,/g,'')):null;
+    if(raw&&!validFar(next))throw Error('용적률은 0보다 큰 숫자로 입력해 주세요.');
+    if(next===record.far||(!validFar(record.far)&&next===null))return;
+    record.far=next;record.farUrl='';app.replaceData(data);window.homeCloud?.changed?.();paint(record);app.notify('용적률을 저장했어요');
+   }catch(e){app.notify(e.message);}
+  };
+ }
  const oldRender=window.renderMarketHistory;
  window.renderMarketHistory=function(a){
+  renderFar(a);
   if(!a.pasteMarket)return oldRender?.(a);
   const root=byId('market-history'),m=a.pasteMarket;if(!root)return;
   const n=m.naverAsks||[],k=m.kbAsks||[],t=m.trades||[],y=m.annual||[];
@@ -143,6 +182,7 @@ KB 출처: URL
  window.homeWatchPaste={parse:parseText,buildPrompt};
  if(typeof dialog.querySelector!=='function')return;
  byId('manualtitle').textContent='아파트 추가';
+ const versionNote=document.createElement?.('small');if(versionNote){versionNote.textContent='주소 분류 R4';versionNote.style.cssText='color:#738492;font-size:11px;margin-left:8px';byId('manualtitle').append(versionNote);}
  const manualAdd=byId('add').onclick;
  byId('additionguide').hidden=true;
  byId('add').onclick=open;
@@ -161,8 +201,23 @@ KB 출처: URL
  panel.insertAdjacentHTML('beforeend','<section style="border-top:1px solid #e0e8ee;margin-top:20px;padding-top:16px"><label for="hw-answer">GPT 조사 답변</label><textarea id="hw-answer" rows="5" placeholder="GPT가 조사한 일반 텍스트 답변 전체를 붙여 넣으세요." style="width:100%;font-size:14px"></textarea><label for="hw-purpose" style="margin-top:14px">투자 목적 · 직접 입력</label><input id="hw-purpose" maxlength="100" placeholder="예: 실거주, 재건축 기대, 직주근접" style="width:100%"><label for="hw-memo" style="margin-top:14px">내 추가 검토 메모 (선택)</label><textarea id="hw-memo" rows="2" maxlength="2000" placeholder="GPT 검토 의견 뒤에 덧붙일 내 생각" style="width:100%"></textarea><div id="hw-preview-result" role="status" style="white-space:pre-wrap;margin-top:12px;line-height:1.65;font-size:14px"></div><button type="button" class="primary" id="hw-import" disabled style="width:100%;margin-top:14px">목록에 추가</button><button type="button" id="hw-direct" style="margin-top:12px;width:100%">직접 입력하기</button></section>');
  const input=byId('hw-answer'),purpose=byId('hw-purpose'),memo=byId('hw-memo'),preview=byId('hw-preview-result'),commit=byId('hw-import');
  function current(){return parseText(input.value,purpose.value,memo.value);}
- function refresh(){commit.disabled=true;preview.textContent='';if(!input.value.trim())return;if(!purpose.value.trim()){preview.textContent='투자 목적을 입력하면 등록할 수 있어요.';return;}try{const r=current(),a=r.added[0];if(!a){preview.textContent=[...r.skipped,...r.warnings].join(' · ');return;}const m=a.pasteMarket,show=rows=>rows.length?money(rows.at(-1).price):'미확보';preview.textContent=[a.name+' · 전용 '+a.area+'㎡','네이버 '+show(m.naverAsks)+' / KB '+show(m.kbAsks)+' / 실거래 '+show(m.trades),'연평균 자료 '+m.annual.length+'개년',a.memo?'검토 메모 '+a.memo.length+'자 저장 예정':'검토 메모 없음',...r.warnings].join('\n');commit.disabled=false;}catch(e){preview.textContent=e.message;}}
+ function refresh(){commit.disabled=true;preview.textContent='';if(!input.value.trim())return;if(!purpose.value.trim()){preview.textContent='투자 목적을 입력하면 등록할 수 있어요.';return;}try{const r=current(),a=r.added[0];if(!a){preview.textContent=[...r.skipped,...r.warnings].join(' · ');return;}const m=a.pasteMarket,show=rows=>rows.length?money(rows.at(-1).price):'미확보';preview.textContent=[a.name+' · 전용 '+a.area+'㎡ / 용적률 '+(validFar(a.far)?a.far+'%':'미확인'),'네이버 '+show(m.naverAsks)+' / KB '+show(m.kbAsks)+' / 실거래 '+show(m.trades),'등록 위치: '+a.region+' / '+(Math.floor((m.naverAsks.at(-1)||m.kbAsks.at(-1)||m.trades.at(-1)).price/2)*2)+'~'+(Math.floor((m.naverAsks.at(-1)||m.kbAsks.at(-1)||m.trades.at(-1)).price/2)*2+2)+'억원','연평균 자료 '+m.annual.length+'개년',a.memo?'검토 메모 '+a.memo.length+'자 저장 예정':'검토 메모 없음',...r.warnings].join('\n');commit.disabled=false;}catch(e){preview.textContent=e.message;}}
  for(const el of [input,purpose,memo])el.addEventListener('input',refresh);
  byId('hw-direct').onclick=()=>{dialog.close();manualAdd?.();};
- commit.onclick=()=>{try{if(byId('add').disabled)throw Error('동기화 중입니다. 완료 후 다시 시도하세요.');const r=current();if(!r.added.length)throw Error(r.skipped.join(' · ')||'새로 추가할 단지가 없어요.');app.replaceData([...app.getData(),...r.added]);window.homeCloud?.changed?.();input.value='';purpose.value='';memo.value='';byId('manualcandidate').value='';refresh();app.notify('아파트를 추가했어요');dialog.close();}catch(e){preview.textContent=e.message;}};
+ function findCard(id){return [...(byId('board')?.querySelectorAll('[data-id]')||[])].find(el=>el.dataset.id===id);}
+ function reveal(card){card.scrollIntoView?.({block:'center',inline:'center'});card.focus?.({preventScroll:true});card.animate?.([{outline:'3px solid #27836c'},{outline:'3px solid transparent'}],{duration:2400});}
+ commit.onclick=()=>{
+  try{
+   if(byId('add').disabled)throw Error('동기화 중입니다. 완료 후 다시 시도하세요.');
+   const r=current();if(!r.added.length)throw Error(r.skipped.join(' · ')||'새로 추가할 단지가 없어요.');
+   const a=r.added[0],before=app.getData(),search=byId('search');
+   if(search)search.value='';
+   app.replaceData([...before,a]);
+   if(!app.getData().some(x=>x.id===a.id))throw Error('등록 후 데이터 확인에 실패했습니다. 답변은 남겨 두었습니다.');
+   window.homeCloud?.changed?.();
+   const card=findCard(a.id);
+   if(!card){preview.textContent='저장은 완료됐지만 목록에서 카드가 확인되지 않습니다. 중복 등록하지 마세요. 백업 후 목록 표시 문제를 확인하세요. ('+a.name+' / '+a.region+')';commit.disabled=true;return;}
+   input.value='';purpose.value='';memo.value='';byId('manualcandidate').value='';refresh();dialog.close();reveal(card);app.notify(a.name+' — 목록에 추가했어요');
+  }catch(e){preview.textContent=e.message;}
+ };
 })();
